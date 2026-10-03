@@ -10,6 +10,8 @@ on:
 env:
   AWS_REGION: us-east-1
   TF_VAR_upload_bucket_name: ${{ secrets.UPLOAD_BUCKET_NAME }}
+  TF_VAR_frontend_bucket_name: ${{ secrets.FRONTEND_BUCKET_NAME }}
+  TF_VAR_notification_email: aceableinfo@gmail.com
   TF_VAR_aws_region: us-east-1
 
 jobs:
