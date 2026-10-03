@@ -499,6 +499,7 @@
         fileName.textContent = uploadedFile.name;
         selectedFileName.style.display = 'none';
         uploadedFile = null;
+        this.querySelector('button[type="submit"]').disabled = true;
         // Optionally, reset form fields
         // document.getElementById('upload-form').reset();
       } catch (err) {
