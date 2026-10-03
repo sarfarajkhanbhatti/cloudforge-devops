@@ -349,8 +349,10 @@ resource "aws_apigatewayv2_stage" "presign_stage" {
   auto_deploy = true
 
   default_route_settings {
-    data_trace_enabled = true
-  }
+        data_trace_enabled     = true
+        throttling_burst_limit = 20
+        throttling_rate_limit  = 10
+      }
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.apigw_logs.arn
