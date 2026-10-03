@@ -1,7 +1,7 @@
 terraform {
   required_version = ">= 1.5.0"
 
-#   Remote Backend
+  #   Remote Backend
   backend "s3" {
     bucket         = "cloudforge-devops-tf-state-sarfaraj"
     key            = "global/devops-accelerator/terraform.tfstate"
@@ -156,14 +156,14 @@ resource "aws_iam_role" "lambda_exec_role" {
 # Give AWS Lambda Execution Permission to this Role
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   role       = aws_iam_role.lambda_exec_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole" 
-#   inbuilt lambda exec role policy
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  #   inbuilt lambda exec role policy
 }
 # Attach S3 Bucket Permission to This Role
 resource "aws_iam_role_policy_attachment" "s3_access" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-#   giving S3 bucket access permission
+  #   giving S3 bucket access permission
 }
 
 # -----------------------------
@@ -175,17 +175,29 @@ resource "aws_s3_bucket" "upload_bucket" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_cors_configuration" "upload_cors" {
+  bucket = aws_s3_bucket.upload_bucket.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "HEAD"]
+    allowed_origins = ["https://${aws_cloudfront_distribution.frontend_distribution.domain_name}"]
+    expose_headers  = []
+    max_age_seconds = 3000
+  }
+}
+
 # -----------------------------
 # Lambda: Process Uploaded File
 # -----------------------------
 
 resource "aws_lambda_function" "process_uploaded_file" {
-  function_name = "process-uploaded-file"
-  runtime       = "python3.11"
-  handler       = "main.lambda_handler"
-  filename      = "${path.module}/../../backend/process-uploaded-file/lambda.zip"
+  function_name    = "process-uploaded-file"
+  runtime          = "python3.11"
+  handler          = "main.lambda_handler"
+  filename         = "${path.module}/../../backend/process-uploaded-file/lambda.zip"
   source_code_hash = filebase64sha256("${path.module}/../../backend/process-uploaded-file/lambda.zip")
-  role = aws_iam_role.lambda_exec_role.arn
+  role             = aws_iam_role.lambda_exec_role.arn
 
   environment {
     variables = {
@@ -299,11 +311,11 @@ resource "aws_iam_role_policy_attachment" "presign_lambda_attach" {
 }
 # create Lambda for Presigned Upload URL
 resource "aws_lambda_function" "presign_lambda" {
-  function_name = "DevOps-Accelerator-Presign-Handler"
-  role          = aws_iam_role.presign_lambda_role.arn
-  handler       = "main.lambda_handler"
-  runtime       = "python3.12"
-  filename      = "${path.module}/../../backend/generate-presigned-url/lambda.zip"
+  function_name    = "DevOps-Accelerator-Presign-Handler"
+  role             = aws_iam_role.presign_lambda_role.arn
+  handler          = "main.lambda_handler"
+  runtime          = "python3.12"
+  filename         = "${path.module}/../../backend/generate-presigned-url/lambda.zip"
   source_code_hash = filebase64sha256("${path.module}/../../backend/generate-presigned-url/lambda.zip")
 
   environment {
@@ -325,10 +337,10 @@ resource "aws_apigatewayv2_api" "presign_api" {
 }
 # Attach api to lambda
 resource "aws_apigatewayv2_integration" "presign_api_integration" {
-  api_id             = aws_apigatewayv2_api.presign_api.id
-  integration_type   = "AWS_PROXY"
-  integration_uri    = aws_lambda_function.presign_lambda.invoke_arn
-  integration_method = "POST"
+  api_id                 = aws_apigatewayv2_api.presign_api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.presign_lambda.invoke_arn
+  integration_method     = "POST"
   payload_format_version = "2.0"
 }
 # create route
@@ -349,19 +361,19 @@ resource "aws_apigatewayv2_stage" "presign_stage" {
   auto_deploy = true
 
   default_route_settings {
-        data_trace_enabled     = true
-        throttling_burst_limit = 20
-        throttling_rate_limit  = 10
-      }
+    data_trace_enabled     = true
+    throttling_burst_limit = 20
+    throttling_rate_limit  = 10
+  }
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.apigw_logs.arn
     format = jsonencode({
-      requestId      = "$context.requestId",
-      requestTime    = "$context.requestTime",
-      httpMethod     = "$context.httpMethod",
-      path           = "$context.path",
-      status         = "$context.status"
+      requestId   = "$context.requestId",
+      requestTime = "$context.requestTime",
+      httpMethod  = "$context.httpMethod",
+      path        = "$context.path",
+      status      = "$context.status"
     })
   }
 }
