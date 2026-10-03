@@ -1,6 +1,6 @@
 # Project Implementation
 
-- clone my Repository: [Repository Link](https://github.com/sonam-niit/Devops-Capstone-Oct-2025.git)
+- clone my Repository: [Repository Link](https://github.com/Nikunj-Java/PW-Feb-DevOps-Capstone.git)
 - or else you can manually create folder named frontend
     - under that create index.html
     - copy code shown here
